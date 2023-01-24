@@ -133,7 +133,7 @@ namespace Mango.Services.ShoppingCartAPI.Controllers
                 checkoutHeader.CartDetails = cartDto.CartDetails;
 
                 //logic to add message to process order.
-                var messageTopic = _configuration["ServiceBus:TopicName"];
+                var messageTopic = _configuration["ServiceBus:CheckOutTopic"];
 
                 await _messageBus.PublishMessage(checkoutHeader, messageTopic);
             }
