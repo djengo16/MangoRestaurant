@@ -10,5 +10,6 @@ namespace Mango.Services.ShoppingCartAPI.Repository
         Task<bool> ClearCart(string userId);
         Task<bool> ApplyCoupon(string userId, string couponCode);
         Task<bool> RemoveCoupon(string userId);
+        Task<int> GetSingleProductCountFromCart(string userId, int productId);
     }
 }

@@ -55,11 +55,14 @@ builder.Services.AddSingleton(mapper);
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.AddScoped<ICartRepository, CartRepository>();
+builder.Services.AddScoped<ICouponRepository, CouponRepository>();
 
 var serviceBusConnectionString = builder.Configuration["ServiceBus:ConnectionString"];
 builder.Services.AddSingleton<IMessageBus> (x => 
     new AzureServiceBusMessageBus(serviceBusConnectionString));
 builder.Services.AddControllers();
+builder.Services.AddHttpClient<ICouponRepository, CouponRepository>(u =>
+    u.BaseAddress = new Uri(builder.Configuration["ServiceUrls:CouponAPI"]));
 
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer("Bearer", options =>

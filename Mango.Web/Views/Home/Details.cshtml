@@ -1,5 +1,9 @@
 ﻿@model ProductDto
 
+@if(ViewBag.Message != null)
+{
+     <div class="info alert-info role="info" p-3">@ViewBag.Message</div>
+}
 <form method="post">
     <input asp-for="ProductId" hidden />
     <div class=" pt-4">
@@ -28,7 +32,7 @@
                                 </div>
                             </div>
                             <div class="row px-4">
-                                <input asp-for="Count" class="form-control" />
+                                <input asp-for="Count" min="0" class="form-control" />
                                 <span asp-validation-for="Count" class="text-danger"></span>
                             </div>
                         </div>
@@ -40,7 +44,14 @@
                         <a class="btn btn-success btn-square form-control btn-lg" style="height:50px;">Back to List</a>
                     </div>
                     <div class="col-12 col-md-6 ">
-                        <button type="submit" class="btn btn-primary form-control btn-lg" style="height:50px;">Add to Cart</button>
+                    @if(Model.Count != 0)
+                    {
+                    <button type="submit" class="btn btn-primary form-control btn-lg" style="height:50px;">Update Cart</button>                       
+                    }
+                    else
+                    {
+                    <button type="submit" class="btn btn-primary form-control btn-lg" style="height:50px;">Add to Cart</button> 
+                    }
                 </div>
             </div>
         </div>

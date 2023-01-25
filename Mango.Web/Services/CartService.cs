@@ -56,6 +56,16 @@ namespace Mango.Web.Services
             });
         }
 
+        public async Task<T> GetSingleProductCountFromUserCartAsync<T>(string userId, int productId, string token = null)
+        {
+            return await this.SendAsync<T>(new ApiRequest()
+            {
+                ApiType = StaticDetails.ApiType.GET,
+                Url = ($"{StaticDetails.ShoppingCartAPIBase}/api/cart/GetSingleProductCount/{userId}/{productId}"),
+                AccessToken = token
+            });
+        }
+
         public async Task<T> RemoveCoupon<T>(string userId, string token = null)
         {
             return await this.SendAsync<T>(new ApiRequest()

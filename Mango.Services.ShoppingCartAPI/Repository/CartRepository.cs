@@ -90,9 +90,12 @@ namespace Mango.Services.ShoppingCartAPI.Repository
                 else
                 {
                     //update the count / cart details
-                    cart.CartDetails.FirstOrDefault().Product = null;
-                    cart.CartDetails.FirstOrDefault().Count += cartDetailsFromDb.Count;
-                    _db.CartDetails.Update(cart.CartDetails.FirstOrDefault());
+                    var cartDetailsToUpdate = cart.CartDetails.FirstOrDefault();
+                    cartDetailsToUpdate.Product = null;
+                    cartDetailsToUpdate.CartDetailsId = cartDetailsFromDb.CartDetailsId;
+                    cartDetailsToUpdate.CartHeaderId = cartHeaderFromDb.CartHeaderId;
+
+                    _db.CartDetails.Update(cartDetailsToUpdate);
                     await _db.SaveChangesAsync();
                 }
 
@@ -113,6 +116,17 @@ namespace Mango.Services.ShoppingCartAPI.Repository
                 .Include(u => u.Product);
 
             return _mapper.Map<CartDto>(cart);
+        }
+
+        public async Task<int> GetSingleProductCountFromCart(string userId, int productId)
+        {
+            var cartFromDb = await _db.CartHeaders.FirstOrDefaultAsync(u => u.UserId == userId);
+            var cartDetailsCountForProduct =  await _db.CartDetails
+                .Where(c => c.ProductId == productId && c.CartHeaderId == cartFromDb.CartHeaderId)
+                .Select(c => c.Count)
+                .SingleOrDefaultAsync();
+
+            return cartDetailsCountForProduct;
         }
 
         public async Task<bool> RemoveCoupon(string userId)

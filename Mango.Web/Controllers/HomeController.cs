@@ -44,12 +44,28 @@ namespace Mango.Web.Controllers
             ProductDto product = new();
 
             var token = await HttpContext.GetTokenAsync("access_token");
+            var userId = User.Claims.Where(u => u.Type == "sub")?.FirstOrDefault()?.Value;
 
-            var response = await _productService.GetProductByIdAsync<ResponseDto>(productId, token);
+            var productResponse = await _productService.GetProductByIdAsync<ResponseDto>(productId, token);
 
-            if (response != null && response.IsSuccess)
+            if (productResponse != null && productResponse.IsSuccess)
             {
-                product = JsonConvert.DeserializeObject<ProductDto>(Convert.ToString(response.Result));
+                product = JsonConvert.DeserializeObject<ProductDto>(Convert.ToString(productResponse.Result));
+            }
+
+            var productCountResponse = await _cartService
+                .GetSingleProductCountFromUserCartAsync<ResponseDto>(userId, productId, token);
+
+            if (productCountResponse.Result != null && productCountResponse.IsSuccess)
+            {
+                int count = Convert.ToInt32(productCountResponse.Result);
+
+                if(count != 0)
+                {
+                    product.Count = count;
+                    ViewBag.Message = "The product is currently in you shopping cart";
+
+                }
             }
 
             return View(product);

@@ -11,13 +11,19 @@ namespace Mango.Services.ShoppingCartAPI.Controllers
     public class CartAPIController : Controller
     {
         private readonly ICartRepository _cartRepository;
+        private readonly ICouponRepository _couponRepository;
         private readonly IMessageBus _messageBus;
         private readonly IConfiguration _configuration;
         protected ResponseDto _response;
 
-        public CartAPIController(ICartRepository cartRepository, IMessageBus messageBus, IConfiguration configuration)
+        public CartAPIController(
+            ICartRepository cartRepository, 
+            IMessageBus messageBus, 
+            IConfiguration configuration,
+            ICouponRepository couponRepository)
         {
             _cartRepository = cartRepository;
+            _couponRepository = couponRepository;
             _messageBus = messageBus;
             _configuration = configuration;
             this._response = new ResponseDto();
@@ -30,6 +36,22 @@ namespace Mango.Services.ShoppingCartAPI.Controllers
             {
                 CartDto cartDto = await _cartRepository.GetCartByUserId(userId);
                 _response.Result = cartDto;
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
+            }
+            return _response;
+        }
+
+        [HttpGet("GetSingleProductCount/{userId}/{productId}")]
+        public async Task<object> GetSingleProductCount(string userId, int productId)
+        {
+            try
+            {
+                int count = await _cartRepository.GetSingleProductCountFromCart(userId, productId);
+                _response.Result = count;
             }
             catch (Exception ex)
             {
@@ -130,8 +152,21 @@ namespace Mango.Services.ShoppingCartAPI.Controllers
                 {
                     return BadRequest();
                 }
-                checkoutHeader.CartDetails = cartDto.CartDetails;
 
+                if (!string.IsNullOrEmpty(checkoutHeader.CouponCode))
+                {
+                    CouponDto coupon = await _couponRepository.GetCoupon(checkoutHeader.CouponCode);
+                    if(checkoutHeader.DiscountTotal != coupon.DiscountAmount)
+                    {
+                        _response.IsSuccess = false;
+                        _response.ErrorMessages = new List<string> { "Coupon price has changed, please confirm" };
+                        _response.DisplayMessage = "Coupon price has changed, please confirm";
+
+                        return _response;
+                    }
+                }
+
+                checkoutHeader.CartDetails = cartDto.CartDetails;
                 //logic to add message to process order.
                 var messageTopic = _configuration["ServiceBus:CheckOutTopic"];
 
