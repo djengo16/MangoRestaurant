@@ -167,10 +167,21 @@ namespace Mango.Services.ShoppingCartAPI.Controllers
                 }
 
                 checkoutHeader.CartDetails = cartDto.CartDetails;
-                //logic to add message to process order.
-                var messageTopic = _configuration["ServiceBus:CheckOutTopic"];
 
-                await _messageBus.PublishMessage(checkoutHeader, messageTopic);
+                //logic to add message to process order.
+
+                //Two ways of doing that
+                //It will automatically decide where and publish the message according to the topic/queue name
+
+                //Publish message to topic (topic can have multiple subscribers that could consume this message)
+                //var messageTopic = _configuration["ServiceBus:CheckOutTopic"];
+                //await _messageBus.PublishMessage(checkoutHeader, messageTopic);
+
+                //Publish message to queue (can have only one consumer)
+                //In this case we forward the queue message to topic and this is why we don't break the logic!
+                var messageQueue = _configuration["ServiceBus:CheckOutQueue"];
+                await _messageBus.PublishMessage(checkoutHeader, messageQueue);
+
                 await _cartRepository.ClearCart(checkoutHeader.UserId);
             }
             catch (Exception ex)
