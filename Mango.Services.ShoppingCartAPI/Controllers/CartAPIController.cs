@@ -171,6 +171,7 @@ namespace Mango.Services.ShoppingCartAPI.Controllers
                 var messageTopic = _configuration["ServiceBus:CheckOutTopic"];
 
                 await _messageBus.PublishMessage(checkoutHeader, messageTopic);
+                await _cartRepository.ClearCart(checkoutHeader.UserId);
             }
             catch (Exception ex)
             {

@@ -31,6 +31,16 @@ namespace Mango.Services.OrderAPI
                 .ForMember(
                     member => member.CartTotalItems,
                     opt => opt.MapFrom(x => x.CartDetails.Count()));
+
+                config.CreateMap<OrderHeader, PaymentRequestMessage>()
+                .ForMember(
+                    member => member.Name,
+                    opt => opt.MapFrom(x => $"{x.FirstName} {x.LastName}"))
+                .ForMember(
+                    member => member.OrderId,
+                    opt => opt.MapFrom(x => x.OrderHeaderId));
+
+
             });
 
             return mappingConfig;
