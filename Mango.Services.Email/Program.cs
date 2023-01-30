@@ -2,6 +2,7 @@ using Mango.Services.Email.DbContexts;
 using Mango.Services.Email.Extensions;
 using Mango.Services.Email.Messaging;
 using Mango.Services.Email.Repository;
+using Mango.Services.PaymentAPI.Messaging;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +18,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IEmailRepository, EmailRepository>();
+builder.Services.AddHostedService<RabbitMQEmailConsumer>();
 
 //Need singleton registration because of Azure Service Bus
 var optionBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
