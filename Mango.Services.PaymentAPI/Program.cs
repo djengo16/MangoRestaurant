@@ -1,6 +1,7 @@
 using Mango.MessageBus;
 using Mango.Services.PaymentAPI.Extensions;
 using Mango.Services.PaymentAPI.Messaging;
+using Mango.Services.PaymentAPI.RabbitMQSender;
 using PaymentProcessor;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,7 +17,8 @@ builder.Services.AddSingleton<IAzureServiceBusConsumer, AzureServiceBusConsumer>
 var serviceBusConnectionString = builder.Configuration["ServiceBus:ConnectionString"];
 builder.Services.AddSingleton<IMessageBus>(x =>
     new AzureServiceBusMessageBus(serviceBusConnectionString));
-
+builder.Services.AddSingleton<IRabbitMQPaymentMessageSender, RabbitMQPaymentMessageSender>();
+builder.Services.AddHostedService<RabbitMQPaymentConsumer>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

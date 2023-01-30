@@ -1,6 +1,7 @@
 ﻿using Mango.MessageBus;
 using Mango.Services.ShoppingCartAPI.Messages;
 using Mango.Services.ShoppingCartAPI.Models.Dto;
+using Mango.Services.ShoppingCartAPI.RabbitMQSender;
 using Mango.Services.ShoppingCartAPI.Repository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,18 +17,21 @@ namespace Mango.Services.ShoppingCartAPI.Controllers
         private readonly ICouponRepository _couponRepository;
         private readonly IMessageBus _messageBus;
         private readonly IConfiguration _configuration;
+        private readonly IRabbitMQCartMessageSender _rabbitMQCartMessageSender;
         protected ResponseDto _response;
 
         public CartAPIController(
             ICartRepository cartRepository, 
             IMessageBus messageBus, 
             IConfiguration configuration,
-            ICouponRepository couponRepository)
+            ICouponRepository couponRepository,
+            IRabbitMQCartMessageSender rabbitMQCartMessageSender)
         {
             _cartRepository = cartRepository;
             _couponRepository = couponRepository;
             _messageBus = messageBus;
             _configuration = configuration;
+            _rabbitMQCartMessageSender = rabbitMQCartMessageSender;
             this._response = new ResponseDto();
         }
 
@@ -172,6 +176,9 @@ namespace Mango.Services.ShoppingCartAPI.Controllers
 
                 //logic to add message to process order.
 
+                //*************************************
+                //1. Azure Service Bus approach
+                //*************************************
                 //Two ways of doing that
                 //It will automatically decide where and publish the message according to the topic/queue name
 
@@ -182,7 +189,13 @@ namespace Mango.Services.ShoppingCartAPI.Controllers
                 //Publish message to queue (can have only one consumer)
                 //In this case we forward the queue message to topic and this is why we don't break the logic!
                 var messageQueue = _configuration["ServiceBus:CheckOutQueue"];
-                await _messageBus.PublishMessage(checkoutHeader, messageQueue);
+                //await _messageBus.PublishMessage(checkoutHeader, messageQueue);
+
+                //*************************************
+                //2. RabbitMQ approach
+                //*************************************
+                _rabbitMQCartMessageSender.SendMessage(checkoutHeader, messageQueue);
+
 
                 await _cartRepository.ClearCart(checkoutHeader.UserId);
             }
